@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Rush Hour</title>
+    <meta name="description" content="Fais sortir la voiture rouge du parking !">
+    <meta name="theme-color" content="#37474f">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Rush Hour">
+    <link rel="stylesheet" href="src/styles.css">
+    <script type="module" src="src/app.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Rush Hour</h1>
+      <div class="board-wrap">
+        <div id="board" role="group" aria-label="Plateau de jeu">
+          <div class="exit" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="btn-new" type="button">Nouvelle partie</button>
+        <button id="btn-restart" type="button">Recommencer</button>
+      </div>
+    </main>
+
+    <dialog id="win-dialog" aria-labelledby="win-title">
+      <div class="confetti" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <p class="party" aria-hidden="true">🎉🚗</p>
+      <h2 id="win-title">Bravo !</h2>
+      <button id="btn-replay" type="button" autofocus>Rejouer</button>
+    </dialog>
+  </body>
+</html>

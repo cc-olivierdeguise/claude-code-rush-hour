@@ -1,0 +1,427 @@
+/* ---------- Thème ---------- */
+:root {
+  --page-bg: #fdf6e3;
+  --ink: #1f2933;
+  --frame: #37474f;
+  --cell: #e3e8ee;
+  --grid-line: #c3ccd6;
+  --exit: #d32f2f;
+  --btn-bg: #1565c0;
+  --btn-bg-hover: #0d47a1;
+  --btn-fg: #ffffff;
+  --focus: #ffb300;
+  --focus-inner: #1f2933;
+
+  --frame-size: clamp(8px, 2.2vmin, 14px);
+  --arrow: clamp(18px, 5vmin, 30px);
+  --gutter: 16px;
+  --board: min(
+    calc(100vw - 2 * var(--gutter) - 2 * var(--frame-size) - var(--arrow)),
+    calc(100vh - 210px),
+    calc(100dvh - 210px),
+    560px
+  );
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding:
+    max(var(--gutter), env(safe-area-inset-top))
+    max(var(--gutter), env(safe-area-inset-right))
+    max(var(--gutter), env(safe-area-inset-bottom))
+    max(var(--gutter), env(safe-area-inset-left));
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- Mise en page ---------- */
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 100%;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  letter-spacing: 0.02em;
+  color: var(--exit);
+}
+
+@media (orientation: landscape) and (min-width: 560px) {
+  :root {
+    --board: min(
+      calc(100vh - 2 * var(--gutter) - 2 * var(--frame-size)),
+      calc(100dvh - 2 * var(--gutter) - 2 * var(--frame-size)),
+      calc(100vw - 2 * var(--gutter) - 2 * var(--frame-size) - var(--arrow) - 260px),
+      560px
+    );
+  }
+
+  main {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      "board title"
+      "board controls";
+    align-items: center;
+    column-gap: 32px;
+    row-gap: 16px;
+  }
+
+  h1 {
+    grid-area: title;
+    align-self: end;
+  }
+
+  .board-wrap {
+    grid-area: board;
+  }
+
+  .controls {
+    grid-area: controls;
+    align-self: start;
+    flex-direction: column;
+  }
+}
+
+/* ---------- Plateau ---------- */
+.board-wrap {
+  padding: var(--frame-size) calc(var(--frame-size) + var(--arrow)) var(--frame-size) var(--frame-size);
+}
+
+#board {
+  position: relative;
+  width: var(--board);
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background-color: var(--cell);
+  background-image:
+    linear-gradient(to right, var(--grid-line) 2px, transparent 2px),
+    linear-gradient(to bottom, var(--grid-line) 2px, transparent 2px);
+  background-size: calc(100% / 6) calc(100% / 6);
+  background-position: -1px -1px;
+  box-shadow: 0 0 0 var(--frame-size) var(--frame), 0 8px 24px calc(var(--frame-size) * 0.5) rgb(0 0 0 / 0.25);
+}
+
+/* Sortie : découpe du cadre à droite de la 3e rangée + flèche. */
+.exit {
+  position: absolute;
+  left: 100%;
+  top: calc(100% / 6 * 2);
+  width: var(--frame-size);
+  height: calc(100% / 6);
+  background: var(--cell);
+}
+
+.exit::after {
+  content: "";
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 50%;
+  width: calc(var(--arrow) - 4px);
+  height: calc(var(--arrow) - 4px);
+  transform: translateY(-50%);
+  background: var(--exit);
+  clip-path: polygon(0 30%, 50% 30%, 50% 0, 100% 50%, 50% 100%, 50% 70%, 0 70%);
+}
+
+/* ---------- Véhicules ---------- */
+.vehicle {
+  --row: 0;
+  --col: 0;
+  --len: 2;
+  --dx: 0;
+  --dy: 0;
+  --gap: clamp(2px, 0.9vmin, 6px);
+
+  position: absolute;
+  left: calc(var(--col) * 100% / 6);
+  top: calc(var(--row) * 100% / 6);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-weight: 800;
+  font-size: calc(var(--board) / 6 * 0.42);
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 12px;
+  transition: left 80ms ease-out, top 80ms ease-out, transform 80ms ease-out;
+  z-index: 1;
+}
+
+.vehicle.h {
+  width: calc(var(--len) * 100% / 6);
+  height: calc(100% / 6);
+  transform: translateX(calc(var(--dx) * 100% / var(--len)));
+}
+
+.vehicle.v {
+  width: calc(100% / 6);
+  height: calc(var(--len) * 100% / 6);
+  transform: translateY(calc(var(--dy) * 100% / var(--len)));
+}
+
+/* Carrosserie */
+.vehicle::before {
+  content: "";
+  position: absolute;
+  inset: var(--gap);
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.2), 0 2px 4px rgb(0 0 0 / 0.25);
+  z-index: -1;
+}
+
+/* Vitres décoratives (pare-brise à l'avant) */
+.vehicle::after {
+  content: "";
+  position: absolute;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.45);
+  z-index: -1;
+}
+
+.vehicle.h::after {
+  top: 22%;
+  bottom: 22%;
+  right: calc(var(--gap) + 10%);
+  width: 12%;
+}
+
+.vehicle.v::after {
+  left: 22%;
+  right: 22%;
+  top: calc(var(--gap) + 10%);
+  height: 12%;
+}
+
+.vehicle.h[data-len="3"]::after {
+  width: 8%;
+}
+
+.vehicle.v[data-len="3"]::after {
+  height: 8%;
+}
+
+.vehicle span {
+  position: relative;
+  z-index: 1;
+}
+
+.vehicle.dragging {
+  cursor: grabbing;
+  transition: none;
+  z-index: 2;
+}
+
+.vehicle:focus {
+  outline: none;
+}
+
+.vehicle:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: -1px;
+  z-index: 3;
+}
+
+.vehicle:focus-visible::before {
+  box-shadow: 0 0 0 3px var(--focus-inner);
+}
+
+.vehicle[aria-disabled="true"] {
+  cursor: default;
+}
+
+.vehicle.exiting {
+  transform: translateX(160%);
+  opacity: 0;
+  transition: left 80ms ease-out, transform 400ms ease-in 80ms, opacity 400ms ease-in 200ms;
+}
+
+/* ---------- Contrôles ---------- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.controls button,
+#btn-replay {
+  min-width: 44px;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.25);
+}
+
+.controls button:hover,
+#btn-replay:hover {
+  background: var(--btn-bg-hover);
+}
+
+.controls button:active,
+#btn-replay:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.25);
+}
+
+#btn-restart {
+  background: var(--frame);
+}
+
+#btn-restart:hover {
+  background: #263238;
+}
+
+.controls button:focus-visible,
+#btn-replay:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* ---------- Dialogue de victoire ---------- */
+#win-dialog {
+  position: fixed;
+  border: 0;
+  border-radius: 24px;
+  padding: 28px 32px 32px;
+  width: min(90vw, 380px);
+  text-align: center;
+  color: var(--ink);
+  background: linear-gradient(160deg, #fff8e1, #ffe0b2);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.35);
+  overflow: hidden;
+}
+
+#win-dialog::backdrop {
+  background: rgb(31 41 51 / 0.55);
+}
+
+#win-dialog[open] {
+  animation: pop 300ms ease-out;
+}
+
+#win-dialog h2 {
+  position: relative;
+  margin: 4px 0 24px;
+  font-size: clamp(2.5rem, 12vw, 3.5rem);
+  color: var(--exit);
+}
+
+.party {
+  position: relative;
+  margin: 0;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+#btn-replay {
+  position: relative;
+  min-height: 56px;
+  padding: 12px 36px;
+  font-size: 1.4rem;
+  background: #2e7d32;
+}
+
+#btn-replay:hover {
+  background: #1b5e20;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confetti i {
+  position: absolute;
+  top: -12px;
+  width: 10px;
+  height: 16px;
+  border-radius: 2px;
+  opacity: 0.9;
+  animation: fall 2.4s linear infinite;
+}
+
+.confetti i:nth-child(1)  { left: 6%;  background: #d32f2f; animation-delay: 0s; }
+.confetti i:nth-child(2)  { left: 14%; background: #fbc02d; animation-delay: 0.6s; }
+.confetti i:nth-child(3)  { left: 22%; background: #1565c0; animation-delay: 1.2s; }
+.confetti i:nth-child(4)  { left: 30%; background: #2e7d32; animation-delay: 0.3s; }
+.confetti i:nth-child(5)  { left: 40%; background: #7b1fa2; animation-delay: 1.8s; }
+.confetti i:nth-child(6)  { left: 48%; background: #fb8c00; animation-delay: 0.9s; }
+.confetti i:nth-child(7)  { left: 56%; background: #00796b; animation-delay: 1.5s; }
+.confetti i:nth-child(8)  { left: 64%; background: #f48fb1; animation-delay: 0.15s; }
+.confetti i:nth-child(9)  { left: 72%; background: #4fc3f7; animation-delay: 2.1s; }
+.confetti i:nth-child(10) { left: 80%; background: #9ccc65; animation-delay: 0.75s; }
+.confetti i:nth-child(11) { left: 88%; background: #d32f2f; animation-delay: 1.35s; }
+.confetti i:nth-child(12) { left: 94%; background: #fdd835; animation-delay: 0.45s; }
+
+@keyframes fall {
+  to {
+    transform: translateY(420px) rotate(540deg);
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* ---------- Mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .vehicle,
+  .vehicle.exiting {
+    transition: none;
+  }
+
+  #win-dialog[open],
+  .confetti i {
+    animation: none;
+  }
+
+  .confetti {
+    display: none;
+  }
+}
